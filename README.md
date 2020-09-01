@@ -24,4 +24,6 @@ Et produktivitet app baseret på konceptet af **Pomodoro Timer**.
 
 ### Teknologi
 
-Jeg har valgt at bygge appen med React og Parcel, da jeg allerede har et template for hvordan et projekt med de to tools kan bygges. Så kan jeg fokusere helt på at bygge funktionaliteten.
+Jeg har valgt at bygge appen med [React](http://reactjs.org/) og [Parcel](https://parceljs.org/), da jeg allerede har et template for hvordan et projekt med de to tools kan bygges. Så kan jeg fokusere helt på at bygge funktionaliteten.
+
+Jeg har også valgt at brug [Moment.js](https://momentjs.com/) for de tidsstempler.

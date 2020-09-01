@@ -30,6 +30,8 @@
   },
   "dependencies": {
     "@emotion/core": "^10.0.28",
+    "moment": "^2.27.0",
+    "moment-duration-format": "^2.3.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
