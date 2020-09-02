@@ -36,6 +36,29 @@ const Timer = ({ phases }) => {
     max-width: 300px;
     margin: 0 auto;
 
+    .buttons {
+      display: flex;
+      justify-content: space-evenly;
+      flex-wrap: wrap;
+
+      .button {
+        margin: 5px;
+        font-size: 1rem;
+        padding: 5px 0;
+        box-sizing: border-box;
+        max-width: 100%;
+
+        &-primary {
+          flex-grow: 5;
+          flex-basis: 30ch;
+        }
+        &-secondary {
+          flex-grow: 1;
+          flex-basis: 10ch;
+        }
+      }
+    }
+
     .timer {
       width: 100%;
       height: 0;
@@ -127,6 +150,8 @@ const Timer = ({ phases }) => {
     );
   }, [currentPhase, phases]);
 
+  // TODO: When time elapses, trigger notification to change phase!
+
   return (
     <div css={styles}>
       <div className="timer">
@@ -160,8 +185,8 @@ const Timer = ({ phases }) => {
         <button
           className="button button-secondary"
           onClick={() => {
-            reset();
             nextPhase();
+            reset();
           }}
         >
           Skip
