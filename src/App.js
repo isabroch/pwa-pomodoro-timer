@@ -7,7 +7,15 @@ import momentDurationFormatSetup from "moment-duration-format";
 // initialize duration formatting plugin for moment library
 momentDurationFormatSetup(moment);
 
-const TimerInput = ({ phase: { name, duration } }) => {
+const TimerInput = ({ phase: { name, duration }, setDuration }) => {
+  const [value, setValue] = useState(duration);
+
+  const changeValue = (e) => {
+    const updateValue = parseInt(e.target.value);
+    setValue(updateValue);
+    setDuration(updateValue);
+  };
+
   return (
     <div className="inputOption">
       <input
@@ -15,7 +23,8 @@ const TimerInput = ({ phase: { name, duration } }) => {
         name={name.toLowerCase()}
         id={name.toLowerCase()}
         min="0"
-        defaultValue={duration}
+        value={value}
+        onChange={changeValue}
       />
       <label htmlFor={name.toLowerCase()}>{name}</label>
     </div>
@@ -73,7 +82,7 @@ const Timer = ({ phases }) => {
     setCurrentPhase(newPhase);
   }
 
-  function reset(phase = null) {
+  function reset() {
     setTimePassed(0);
     setIsActive(false);
   }
@@ -83,13 +92,17 @@ const Timer = ({ phases }) => {
   }
 
   // toggle counting based on active state
+  // TODO: Change interval back to 1000ms - currently 10ms for faster testing!
+  // TODO: Stop when timePassed = duration!
   useEffect(() => {
     let timer = null;
 
     if (isActive) {
       timer = setInterval(() => {
-        setTimePassed((timePassed) => timePassed + 1);
-      }, 1000);
+        setTimePassed((timePassed) => {
+          return timePassed + 1;
+        });
+      }, 10);
     } else if (!isActive) {
       clearInterval(timer);
     }
@@ -100,10 +113,10 @@ const Timer = ({ phases }) => {
     };
   }, [isActive]);
 
-  // change duration based on active phase
+  // change duration based on active phase;
   useEffect(() => {
     setDuration(moment.duration(phases[currentPhase].duration, "minutes"));
-  }, [currentPhase]);
+  }, [currentPhase, phases]);
 
   return (
     <div css={styles}>
@@ -150,8 +163,7 @@ const Timer = ({ phases }) => {
 };
 
 const App = () => {
-  // duration is handled in minutes
-  const phases = [
+  const [phases, setPhases] = useState([
     {
       id: 0,
       name: "Work",
@@ -162,12 +174,28 @@ const App = () => {
       name: "Break",
       duration: 5,
     },
-  ];
+  ]);
+
+  const setPhaseDuration = (id, updateValue) => {
+    setPhases((phases) => {
+      const i = phases.findIndex((phase) => phase.id === id);
+      phases[i].duration = updateValue;
+      // creates a 'deep' copy, triggering full update
+      const newPhases = JSON.parse(JSON.stringify(phases));
+      return newPhases;
+    });
+  };
 
   return (
     <div className="container">
-      {phases.map((props) => {
-        return <TimerInput key={props.id} phase={props} />;
+      {phases.map(({ id, ...props }) => {
+        return (
+          <TimerInput
+            key={id}
+            phase={props}
+            setDuration={(duration) => setPhaseDuration(id, duration)}
+          />
+        );
       })}
       <Timer phases={phases} />
     </div>
