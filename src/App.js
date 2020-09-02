@@ -5,7 +5,7 @@ import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
 import { motion } from "framer-motion";
 
-import { Timer } from "./Timer";
+import { PomodoroTimer } from "./PomodoroTimer";
 
-const App = () => <Timer />;
+const App = () => <PomodoroTimer />;
 render(<App />, document.getElementById("app"));
