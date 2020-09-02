@@ -8,6 +8,86 @@ import { motion } from "framer-motion";
 // initialize duration formatting plugin for moment library
 momentDurationFormatSetup(moment);
 
+const Buttons = ({
+  stuff: { timePassed, duration, nextPhase, reset, toggle, isActive },
+}) => {
+  return (
+    <div className="buttons">
+      {timePassed === duration ? (
+        <button
+          className="button button-primary"
+          onClick={() => {
+            nextPhase();
+            reset();
+            toggle();
+          }}
+        >
+          Next Phase
+        </button>
+      ) : (
+        <button className="button button-primary" onClick={toggle}>
+          {timePassed === 0 && !isActive
+            ? "Start"
+            : isActive
+            ? "Pause"
+            : "Resume"}
+        </button>
+      )}
+      <button className="button button-secondary" onClick={reset}>
+        Reset
+      </button>
+      <button
+        className="button button-secondary"
+        onClick={() => {
+          nextPhase();
+          reset();
+        }}
+      >
+        Skip
+      </button>
+    </div>
+  );
+};
+
+const PhaseInputs = ({ phases, isActive, currentPhase, setPhaseDuration }) => {
+  const styles = css`
+    display: flex;
+    justify-content: space-evenly;
+
+    .inputOption {
+      display: flex;
+      flex-direction: column;
+      flex: 0 1 10ch;
+      margin: 5px 10px;
+      align-items: center;
+
+      input {
+        width: 100%;
+      }
+
+      label {
+        font-family: sans-serif;
+        line-height: 200%;
+      }
+    }
+  `;
+
+  return (
+    <div css={styles}>
+      {phases.map(({ id, ...props }) => {
+        return (
+          <TimerInput
+            key={id}
+            phase={props}
+            isActive={currentPhase === id ? isActive : false}
+            setDuration={(duration) => setPhaseDuration(id, duration)}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 const TimerInput = ({ phase: { name, duration }, setDuration, isActive }) => {
   const [value, setValue] = useState(duration);
 
@@ -70,8 +150,8 @@ const Timer = ({
         setTimePassed((timePassed) => {
           // stop timer at 0
           if (timePassed === duration) {
-            setIsActive(false);
             clearInterval(timer);
+            setIsActive(false);
             return timePassed;
           }
 
@@ -200,39 +280,9 @@ const Timer = ({
         </div>
       </div>
 
-      <div className="buttons">
-        {timePassed === duration ? (
-          <button
-            className="button button-primary"
-            onClick={() => {
-              nextPhase();
-              reset();
-            }}
-          >
-            Next Phase
-          </button>
-        ) : (
-          <button className="button button-primary" onClick={toggle}>
-            {timePassed === 0 && !isActive
-              ? "Start"
-              : isActive
-              ? "Pause"
-              : "Resume"}
-          </button>
-        )}
-        <button className="button button-secondary" onClick={reset}>
-          Reset
-        </button>
-        <button
-          className="button button-secondary"
-          onClick={() => {
-            nextPhase();
-            reset();
-          }}
-        >
-          Skip
-        </button>
-      </div>
+      <Buttons
+        stuff={{ timePassed, duration, nextPhase, reset, toggle, isActive }}
+      />
     </div>
   );
 };
@@ -286,45 +336,6 @@ const App = () => {
         setCurrentPhase={setCurrentPhase}
         setIsActive={setIsActive}
       />
-    </div>
-  );
-};
-
-const PhaseInputs = ({ phases, isActive, currentPhase, setPhaseDuration }) => {
-  const styles = css`
-    display: flex;
-    justify-content: space-evenly;
-
-    .inputOption {
-      display: flex;
-      flex-direction: column;
-      flex: 0 1 10ch;
-      margin: 5px 10px;
-      align-items: center;
-
-      input {
-        width: 100%;
-      }
-
-      label {
-        font-family: sans-serif;
-        line-height: 200%;
-      }
-    }
-  `;
-
-  return (
-    <div css={styles}>
-      {phases.map(({ id, ...props }) => {
-        return (
-          <TimerInput
-            key={id}
-            phase={props}
-            isActive={currentPhase === id ? isActive : false}
-            setDuration={(duration) => setPhaseDuration(id, duration)}
-          />
-        );
-      })}
     </div>
   );
 };
