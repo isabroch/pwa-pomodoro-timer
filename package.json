@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clearCache": "rm -rf .cache/ dist/",
-    "dev": "parcel src/index.html --no-source-maps",
+    "dev": "parcel src/index.html",
     "build": "parcel build src/index.html --no-source-maps"
   },
   "keywords": [],
