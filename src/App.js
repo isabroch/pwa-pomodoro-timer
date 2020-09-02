@@ -93,13 +93,20 @@ const Timer = ({ phases }) => {
 
   // toggle counting based on active state
   // TODO: Change interval back to 1000ms - currently 10ms for faster testing!
-  // TODO: Stop when timePassed = duration!
   useEffect(() => {
     let timer = null;
 
     if (isActive) {
       timer = setInterval(() => {
         setTimePassed((timePassed) => {
+          // stop timer at 0
+          if (timePassed === duration) {
+            setIsActive(false);
+            clearInterval(timer);
+            return timePassed;
+          }
+
+          // else continue timer
           return timePassed + 1;
         });
       }, 10);
@@ -115,7 +122,9 @@ const Timer = ({ phases }) => {
 
   // change duration based on active phase;
   useEffect(() => {
-    setDuration(moment.duration(phases[currentPhase].duration, "minutes"));
+    setDuration(
+      moment.duration(phases[currentPhase].duration, "minutes").asSeconds()
+    );
   }, [currentPhase, phases]);
 
   return (
@@ -129,9 +138,9 @@ const Timer = ({ phases }) => {
         <div className="labels">
           <span className="label label-time">
             {moment
-              .duration(duration)
+              .duration(duration, "seconds")
               .subtract(timePassed, "seconds")
-              .format("m:ss")}
+              .format("hh:*mm:ss")}
           </span>
           <span className="label label-name">{phases[currentPhase].name}</span>
         </div>
