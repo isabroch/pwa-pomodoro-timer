@@ -201,13 +201,25 @@ const Timer = ({
       </div>
 
       <div className="buttons">
-        <button className="button button-primary" onClick={toggle}>
-          {timePassed === 0 && !isActive
-            ? "Start"
-            : isActive
-            ? "Pause"
-            : "Resume"}
-        </button>
+        {timePassed === duration ? (
+          <button
+            className="button button-primary"
+            onClick={() => {
+              nextPhase();
+              reset();
+            }}
+          >
+            Next Phase
+          </button>
+        ) : (
+          <button className="button button-primary" onClick={toggle}>
+            {timePassed === 0 && !isActive
+              ? "Start"
+              : isActive
+              ? "Pause"
+              : "Resume"}
+          </button>
+        )}
         <button className="button button-secondary" onClick={reset}>
           Reset
         </button>
