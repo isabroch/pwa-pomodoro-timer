@@ -11,19 +11,24 @@ import { camelCase } from "./function/camelCase";
 momentDurationFormatSetup(moment);
 
 // CUSTOM HOOKS
-
 const useNotifications = () => {
   const [wantsNotifications, setWantsNotifications] = useState(
     Notification.permission === "granted"
   );
 
-  let sw;
+  const [notificationReply, setNotificationReply] = useState(null);
+
+  useEffect(() => {
+    function handleMessage(e) {
+      setNotificationReply(e.data);
+    }
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   async function handleNotificationSubscription() {
-    // Check that service worker ir registered!
-    sw = await navigator.serviceWorker.getRegistration();
-    console.log(sw);
-
     // Request permission to send notifications to user
     Notification.requestPermission().then((response) => {
       switch (response) {
@@ -63,15 +68,22 @@ const useNotifications = () => {
     </label>
   );
 
-  function sendNotification(title = "Notification!", options = null) {
+  async function sendNotification(title = "Notification!", options = null) {
+    let sw = await navigator.serviceWorker.getRegistration();
     if (wantsNotifications) {
+      // if sw exists, send notification using sw!
       if (sw) {
-        console.log("Setting up service worker notification");
+        sw.showNotification(title, options);
         return;
       }
 
+      // delete actions if sending non-sw notification, send browser notif
+      if (options.actions) {
+        delete options.actions;
+      }
       return new Notification(title, options);
     }
+
     console.log("User does not want notifications");
   }
 
@@ -80,11 +92,13 @@ const useNotifications = () => {
     sendNotification,
     wantsNotifications,
     setWantsNotifications,
+    notificationReply,
+    setNotificationReply,
   };
 };
 
 const useTimer = (secondsDuration, timerEndCallback) => {
-  const speed = 100;
+  const speed = 1000;
 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -382,7 +396,7 @@ const Buttons = ({
 
   let mainAction = "Start";
   if (secondsRemaining === 0) {
-    mainAction = "Restart";
+    mainAction = "Next Phase";
   }
   if (isActive) {
     mainAction = "Pause";
@@ -394,7 +408,7 @@ const Buttons = ({
         css={[style.button.base, style.button.primary]}
         onClick={() => {
           if (secondsRemaining === 0) {
-            // restart
+            goToNextPhase();
             setSecondsElapsed(0);
           }
 
@@ -429,14 +443,24 @@ const Buttons = ({
 // MAIN COMPONENT
 
 export const PomodoroTimer = () => {
-  const { NotificationCheckbox, sendNotification } = useNotifications();
+  const {
+    NotificationCheckbox,
+    sendNotification,
+    notificationReply,
+    setNotificationReply,
+  } = useNotifications();
   const phases = usePhases();
+  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
 
   function endTimer() {
     const title = `${phases.currentPhase.name} time has ended!`;
     const options = {
       tag: "renotify",
       renotify: true,
+      data: phases.currentPhaseID,
+      actions: [
+        { action: "startNext", title: `Start ${phases.nextPhase.name}` },
+      ],
     };
     try {
       sendNotification(title, options);
@@ -445,7 +469,19 @@ export const PomodoroTimer = () => {
     }
   }
 
-  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
+  useEffect(() => {
+    switch (notificationReply) {
+      case "startNext":
+        phases.goToNextPhase();
+        timer.setSecondsElapsed(0);
+        timer.setIsActive(true);
+        setNotificationReply(null);
+        break;
+
+      default:
+        break;
+    }
+  }, [notificationReply]);
 
   return (
     <div
