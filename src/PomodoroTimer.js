@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { render } from "react-dom";
 import { css } from "@emotion/core";
-import moment from "moment";
+import moment, { duration } from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
 import { motion, useAnimation } from "framer-motion";
 
@@ -9,7 +9,6 @@ import { camelCase } from "./function/camelCase";
 
 // initialize duration formatting plugin for moment library
 momentDurationFormatSetup(moment);
-
 
 // CUSTOM HOOKS
 
@@ -21,8 +20,8 @@ const useTimer = (secondsDuration) => {
   const [secondsRemaining, setSecondsRemaining] = useState(secondsDuration);
 
   useEffect(() => {
-    setSecondsRemaining(secondsDuration - secondsElapsed)
-  }, [secondsElapsed, secondsDuration])
+    setSecondsRemaining(secondsDuration - secondsElapsed);
+  }, [secondsElapsed, secondsDuration]);
 
   useEffect(() => {
     let timer = null;
@@ -30,6 +29,7 @@ const useTimer = (secondsDuration) => {
     if (isActive) {
       timer = setInterval(() => {
         setSecondsElapsed((secondsElapsedPrev) => {
+          console.log(secondsElapsedPrev, secondsDuration);
           // increase secondsElapsed every tick
           // stop timer when newElapsed = duration, and run callback
           if (secondsElapsedPrev >= secondsDuration) {
@@ -47,7 +47,7 @@ const useTimer = (secondsDuration) => {
     return () => {
       clearInterval(timer);
     };
-  }, [isActive]);
+  }, [isActive, secondsDuration]);
 
   return {
     secondsElapsed,
@@ -56,7 +56,7 @@ const useTimer = (secondsDuration) => {
     setIsActive,
     secondsDuration,
     secondsRemaining,
-    setSecondsRemaining
+    setSecondsRemaining,
   };
 };
 
@@ -76,7 +76,21 @@ const usePhases = () => {
     },
   ];
 
-  const [phases, setPhases] = useState(defaultPhases);
+  function reducerPhases(phases, { action, id, field, value }) {
+    switch (action) {
+      case "UPDATE":
+        return phases.map((phase) => {
+          if (phase.id === id) {
+            phase[field] = value;
+          }
+          return phase;
+        });
+      default:
+        return phases;
+    }
+  }
+
+  const [phases, dispatchPhases] = useReducer(reducerPhases, defaultPhases);
   const [currentPhaseID, setCurrentPhaseID] = useState(0);
 
   const nextPhase = () => {
@@ -89,7 +103,7 @@ const usePhases = () => {
 
   return {
     phases,
-    setPhases,
+    dispatchPhases,
     currentPhaseID,
     setCurrentPhaseID,
     nextPhase,
@@ -97,66 +111,78 @@ const usePhases = () => {
   };
 };
 
-
 // SUB-COMPONENTS
+const Input = ({ name, defaultValue, isDisabled, changeCallback }) => {
+  const [value, setValue] = useState(defaultValue);
+  const id = camelCase(name);
 
-const Inputs = ({ phases }) => {
-  const Input = ({ name, defaultValue, isDisabled, changeCallback }) => {
-    const [value, setValue] = useState(defaultValue);
-    const id = camelCase(name);
+  const changeValue = (e) => {
+    const updateValue = parseInt(e.target.value || 1);
+    setValue(updateValue);
+    changeCallback(updateValue);
+  };
 
-    const changeValue = (e) => {
-      const updateValue = parseInt(e.target.value);
-      setValue(updateValue);
-      changeCallback(updateValue);
-    };
-
-    const styles = {
-      container: css`
-        display: flex;
-        flex-direction: column;
-        flex: 0 1 10ch;
-        margin: 5px 10px;
-        align-items: center;
-      `,
-      input: css`
-        width: 100%;
-      `,
-      label: css`
-        font-family: sans-serif;
-        line-height: 200%;
-      `,
-    };
-
-    return (
-      <div css={styles.container}>
-        <input
-          css={styles.input}
-          type="number"
-          name={id}
-          id={id}
-          min="1"
-          value={value}
-          onChange={changeValue}
-          disabled={isDisabled}
-        />
-        <label css={styles.label} htmlFor={id}>
-          {name}
-        </label>
-      </div>
-    );
+  const styles = {
+    container: css`
+      display: flex;
+      flex-direction: column;
+      flex: 0 1 10ch;
+      margin: 5px 10px;
+      align-items: center;
+    `,
+    input: css`
+      width: 100%;
+    `,
+    label: css`
+      font-family: sans-serif;
+      line-height: 200%;
+    `,
   };
 
   return (
-    <div css={css`display: flex;
-    justify-content: space-evenly;`}>
+    <div css={styles.container}>
+      <input
+        css={styles.input}
+        type="number"
+        name={id}
+        id={id}
+        min="1"
+        value={value || 1}
+        onChange={changeValue}
+        disabled={isDisabled}
+      />
+      <label css={styles.label} htmlFor={id}>
+        {name}
+      </label>
+    </div>
+  );
+};
+
+const Inputs = ({
+  phases: { phases, currentPhase, dispatchPhases },
+  timer: { setIsActive, isActive },
+}) => {
+  return (
+    <div
+      css={css`
+        display: flex;
+        justify-content: space-evenly;
+      `}
+    >
       {phases.map((phase) => (
         <Input
           key={phase.id}
           name={phase.name}
           defaultValue={phase.duration}
-          isDisabled={false}
-          changeCallback={console.log}
+          isDisabled={currentPhase.id === phase.id && isActive}
+          changeCallback={(valueNew) => {
+            dispatchPhases({
+              action: "UPDATE",
+              id: phase.id,
+              field: "duration",
+              value: valueNew,
+            });
+          }}
         />
       ))}
     </div>
@@ -232,7 +258,9 @@ const Countdown = ({
             css={styles.timeElapsed}
             d="M 50, 50 m -45, 0 a 45,45 0 1,0 90,0 a 45,45 0 1,0 -90,0"
             initial={{ pathLength: 0 }}
-            animate={{ pathLength: Math.max(secondsElapsed / secondsDuration, 0) }}
+            animate={{
+              pathLength: Math.max(secondsElapsed / secondsDuration || 0, 0),
+            }}
           />
         </g>
       </svg>
@@ -307,13 +335,11 @@ const Buttons = ({
   );
 };
 
-
-
 // MAIN COMPONENT
 
 export const PomodoroTimer = () => {
-  const { currentPhase, nextPhase, phases } = usePhases();
-  const timer = useTimer(currentPhase.duration * 60);
+  const phases = usePhases();
+  const timer = useTimer(phases.currentPhase.duration * 60);
 
   return (
     <div
@@ -322,15 +348,15 @@ export const PomodoroTimer = () => {
         margin: auto;
       `}
     >
-      <Inputs phases={phases} />
+      <Inputs timer={timer} phases={phases} />
 
       <Countdown
-        name={currentPhase.name}
-        color={currentPhase.color}
+        name={phases.currentPhase.name}
+        color={phases.currentPhase.color}
         timer={timer}
       />
 
-      <Buttons timer={timer} nextPhase={nextPhase} />
+      <Buttons timer={timer} nextPhase={phases.nextPhase} />
     </div>
   );
 };
