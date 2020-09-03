@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useReducer } from "react";
-import { render } from "react-dom";
 import { css } from "@emotion/core";
-import moment, { duration } from "moment";
+import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { camelCase } from "./function/camelCase";
 
