@@ -12,12 +12,88 @@ momentDurationFormatSetup(moment);
 
 // CUSTOM HOOKS
 
-const useTimer = (secondsDuration) => {
+const useNotifications = () => {
+  const [wantsNotifications, setWantsNotifications] = useState(
+    Notification.permission === "granted"
+  );
+
+  let sw;
+
+  async function handleNotificationSubscription() {
+    // Check that service worker ir registered!
+    sw = await navigator.serviceWorker.getRegistration();
+    console.log(sw);
+
+    // Request permission to send notifications to user
+    Notification.requestPermission().then((response) => {
+      switch (response) {
+        case "denied":
+          alert(
+            "Notifications are blocked by your browser! We cannot send you any notifications until you unblock them."
+          );
+          setWantsNotifications(false);
+          break;
+
+        default:
+          setWantsNotifications((state) => !state);
+          break;
+      }
+    });
+  }
+
+  const NotificationCheckbox = () => (
+    <label
+      css={css`
+        display: flex;
+        margin: 0.75em;
+        justify-content: center;
+      `}
+    >
+      <input
+        css={css`
+          margin-right: 1ch;
+        `}
+        type="checkbox"
+        id="wantsNotification"
+        name="wantsNotification"
+        checked={wantsNotifications}
+        onChange={handleNotificationSubscription}
+      />
+      <span>Notify me when timer ends!</span>
+    </label>
+  );
+
+  function sendNotification(title = "Notification!", options = null) {
+    if (wantsNotifications) {
+      if (sw) {
+        console.log("Setting up service worker notification");
+        return;
+      }
+
+      return new Notification(title, options);
+    }
+    console.log("User does not want notifications");
+  }
+
+  return {
+    NotificationCheckbox,
+    sendNotification,
+    wantsNotifications,
+    setWantsNotifications,
+  };
+};
+
+const useTimer = (secondsDuration, timerEndCallback) => {
   const speed = 100;
 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(secondsDuration);
+
+  function onTimerEnd() {
+    setIsActive(false);
+    timerEndCallback();
+  }
 
   useEffect(() => {
     setSecondsRemaining(secondsDuration - secondsElapsed);
@@ -29,11 +105,10 @@ const useTimer = (secondsDuration) => {
     if (isActive) {
       timer = setInterval(() => {
         setSecondsElapsed((secondsElapsedPrev) => {
-          console.log(secondsElapsedPrev, secondsDuration);
           // increase secondsElapsed every tick
           // stop timer when newElapsed = duration, and run callback
           if (secondsElapsedPrev >= secondsDuration) {
-            setIsActive(false);
+            onTimerEnd();
             return secondsElapsedPrev;
           }
 
@@ -65,7 +140,7 @@ const usePhases = () => {
     {
       id: 0,
       name: "Work",
-      duration: 25,
+      duration: 1,
       color: "red",
     },
     {
@@ -93,11 +168,14 @@ const usePhases = () => {
   const [phases, dispatchPhases] = useReducer(reducerPhases, defaultPhases);
   const [currentPhaseID, setCurrentPhaseID] = useState(0);
 
-  const nextPhase = () => {
+  const goToNextPhase = () => {
     setCurrentPhaseID((prevPhase) =>
       prevPhase === phases.length - 1 ? 0 : prevPhase + 1
     );
   };
+
+  const nextPhase =
+    phases[currentPhaseID === phases.length - 1 ? 0 : currentPhaseID + 1];
 
   const currentPhase = phases[currentPhaseID];
 
@@ -106,6 +184,7 @@ const usePhases = () => {
     dispatchPhases,
     currentPhaseID,
     setCurrentPhaseID,
+    goToNextPhase,
     nextPhase,
     currentPhase,
   };
@@ -273,8 +352,8 @@ const Countdown = ({
 };
 
 const Buttons = ({
-  timer: { setSecondsElapsed, setIsActive, isActive },
-  nextPhase,
+  timer: { secondsRemaining, setSecondsElapsed, setIsActive, isActive },
+  goToNextPhase,
 }) => {
   const style = {
     buttons: css`
@@ -301,23 +380,35 @@ const Buttons = ({
     },
   };
 
+  let mainAction = "Start";
+  if (secondsRemaining === 0) {
+    mainAction = "Restart";
+  }
+  if (isActive) {
+    mainAction = "Pause";
+  }
+
   return (
     <div css={style.buttons}>
       <button
         css={[style.button.base, style.button.primary]}
         onClick={() => {
+          if (secondsRemaining === 0) {
+            // restart
+            setSecondsElapsed(0);
+          }
+
           setIsActive((isActive) => !isActive);
         }}
       >
-        {isActive ? "Pause" : "Start"}
+        {mainAction}
       </button>
       <button
         css={[style.button.base, style.button.secondary]}
         onClick={() => {
           setIsActive(false);
           setSecondsElapsed(0);
-          nextPhase();
-          setIsActive(true);
+          goToNextPhase();
         }}
       >
         Skip
@@ -338,8 +429,23 @@ const Buttons = ({
 // MAIN COMPONENT
 
 export const PomodoroTimer = () => {
+  const { NotificationCheckbox, sendNotification } = useNotifications();
   const phases = usePhases();
-  const timer = useTimer(phases.currentPhase.duration * 60);
+
+  function endTimer() {
+    const title = `${phases.currentPhase.name} time has ended!`;
+    const options = {
+      tag: "renotify",
+      renotify: true,
+    };
+    try {
+      sendNotification(title, options);
+    } catch (error) {
+      console.error("Notification could not be sent", error);
+    }
+  }
+
+  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
 
   return (
     <div
@@ -354,9 +460,12 @@ export const PomodoroTimer = () => {
         name={phases.currentPhase.name}
         color={phases.currentPhase.color}
         timer={timer}
+        onTimerEnd={sendNotification}
       />
 
-      <Buttons timer={timer} nextPhase={phases.nextPhase} />
+      <NotificationCheckbox />
+
+      <Buttons timer={timer} goToNextPhase={phases.goToNextPhase} />
     </div>
   );
 };
