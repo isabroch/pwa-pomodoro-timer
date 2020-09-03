@@ -2,8 +2,8 @@ const cacheName = "static-cache-v3";
 const cacheAllowList = ["static-cache-v3"];
 const urlsToCache = [
   "/",
-  "App.js",
   "index.html",
+  "App.js",
   "img/icon_512.png",
   "img/icon_192.png",
 ];

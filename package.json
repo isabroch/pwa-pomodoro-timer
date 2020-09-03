@@ -26,6 +26,7 @@
     "eslint-plugin-react": "^7.20.5",
     "eslint-plugin-react-hooks": "^1.0.2",
     "parcel-bundler": "^1.12.4",
+    "parcel-plugin-sw-asset-urls": "^0.1.2",
     "prettier": "^2.0.5",
     "typescript": "^4.0.2"
   },
