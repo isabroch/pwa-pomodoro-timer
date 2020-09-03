@@ -2,8 +2,9 @@ import React from "react";
 import { render } from "react-dom";
 import { css } from "@emotion/core";
 
-import { PomodoroTimer } from "./PomodoroTimer";
-import { Install } from "./Install";
+import { useNotifications } from "./components/useNotifications";
+import { PomodoroTimer } from "./components/PomodoroTimer";
+import { Install } from "./components/Install";
 
 // Inititate service worker
 if ("serviceWorker" in navigator) {
@@ -17,7 +18,10 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-const App = () => (
+const App = () => {
+  const notifications = useNotifications();
+
+  return (
   <div
     css={css`
       display: grid;
@@ -25,7 +29,8 @@ const App = () => (
       height: 100vh;
     `}
   >
-    <PomodoroTimer />
+    <notifications.NotificationToast/>
+    <PomodoroTimer notifications={notifications}/>
     <Install
       css={css`
         position: fixed;
@@ -34,5 +39,5 @@ const App = () => (
       `}
     />
   </div>
-);
+);}
 render(<App />, document.getElementById("app"));
