@@ -7,7 +7,7 @@ _Aflevering dato: 04-09-2020, kl. 13.30_
 
 Et produktivitet app baseret på konceptet af **Pomodoro Timer**.
 
-### Funktioner:
+### Funktionalitet:
 
 - To fase: Arbejde tid (default 25 min.) og pause tid (default 5 min.)
 - Fasetiden kan tilpasses.
@@ -21,3 +21,9 @@ Et produktivitet app baseret på konceptet af **Pomodoro Timer**.
   - Nar timer ER aktiv:
     - **Pause** ville pause timer på aktuelle tidspunkt
     - **Stop** ville ryd timer og nulstil til begyndelse af arbejde tid
+
+### Teknologi
+
+Jeg har valgt at bygge appen med [React](http://reactjs.org/) og [Parcel](https://parceljs.org/), da jeg allerede har et template for hvordan et projekt med de to tools kan bygges. Så kan jeg fokusere helt på at bygge funktionaliteten.
+
+Jeg har også valgt at brug [Moment.js](https://momentjs.com/) for de tidsstempler.
