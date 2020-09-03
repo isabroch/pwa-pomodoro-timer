@@ -7,11 +7,14 @@ import { motion } from "framer-motion";
 
 import { PomodoroTimer } from "./PomodoroTimer";
 
-// Inititate service worker!
+// Inititate service worker
+// store registration data for push notifs
+let registration = null;
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async function () {
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      registration = await navigator.serviceWorker.register("/sw.js");
       console.log(`Created service worker with scope: ${registration.scope}`);
     } catch (error) {
       console.error(`Failed to create service worker: ${error}`);
