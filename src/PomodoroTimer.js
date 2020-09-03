@@ -9,6 +9,10 @@ import { camelCase } from "./function/camelCase";
 // initialize duration formatting plugin for moment library
 momentDurationFormatSetup(moment);
 
+// speed of clocks
+const speed = 1;
+
+
 // CUSTOM HOOKS
 const useNotifications = () => {
   const [wantsNotifications, setWantsNotifications] = useState(
@@ -97,7 +101,6 @@ const useNotifications = () => {
 };
 
 const useTimer = (secondsDuration, timerEndCallback) => {
-  const speed = 1000;
 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isActive, setIsActive] = useState(false);
