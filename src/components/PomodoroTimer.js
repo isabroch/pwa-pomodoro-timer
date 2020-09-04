@@ -26,7 +26,7 @@ export const PomodoroTimer = ({ notifications }) => {
     toast,
   } = notifications;
   const phases = usePhases();
-  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
+  const timer = useTimer(phases.currentPhase.duration, endTimer);
 
   const [quote, setQuote] = useState({});
 
