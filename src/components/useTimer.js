@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-// speed of clocks
+// speed of clocks in ms
 const speed = 1;
 export const useTimer = (secondsDuration, timerEndCallback) => {
-
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(secondsDuration);
@@ -32,8 +31,7 @@ export const useTimer = (secondsDuration, timerEndCallback) => {
           return secondsElapsedPrev + 1;
         });
       }, speed);
-    }
-    else {
+    } else {
       clearInterval(timer);
     }
 
