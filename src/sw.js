@@ -1,5 +1,5 @@
-const cacheName = "static-cache-v3";
-const cacheAllowList = ["static-cache-v3"];
+const cacheName = "static-cache-v1";
+const cacheAllowList = ["static-cache-v1"];
 const urlsToCache = [
   "/",
   "index.html",
@@ -41,13 +41,13 @@ self.addEventListener("fetch", function (e) {
         return cacheResponse;
       }
 
-      return fetch(e.request).then(async (fetchResponse) => {
+      return fetch(e.request).then((fetchResponse) => {
         // check for valid fetched response
-        // do not cache if invalid or a third-party asset
+        // do not cache if invalid
         if (
           !fetchResponse ||
           fetchResponse.status !== 200 ||
-          (fetchResponse.type !== "basic" || fetchResponse.type !== "cors")
+          fetchResponse.type == "opaque"
         ) {
           return fetchResponse;
         }
@@ -55,9 +55,12 @@ self.addEventListener("fetch", function (e) {
         // cloning response. response is stream and is 'consumed', so we need one for browser to consume and one for cache to consume.
         const responseToCache = fetchResponse.clone();
 
+        console.log(fetchResponse, responseToCache);
+
         // caching fetched response
-        const cache = await caches.open(cacheName);
-        cache.put(e.request, responseToCache);
+        caches
+          .open(cacheName)
+          .then((cache) => cache.put(e.request, responseToCache));
 
         return fetchResponse;
       });
