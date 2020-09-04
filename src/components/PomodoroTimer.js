@@ -31,7 +31,7 @@ export const PomodoroTimer = ({ notifications }) => {
 
   function endTimer() {
     const title = `${phases.currentPhase.name} time has ended!`;
-    const message = (
+    const message = quote.text ? (
       <span>
         {quote.text}
         <span
@@ -39,11 +39,10 @@ export const PomodoroTimer = ({ notifications }) => {
             white-space: nowrap;
           `}
         >
-          {" "}
-          — {quote.author}{" "}
+          — {quote.author || "?"}
         </span>
       </span>
-    );
+    ) : null;
     const options = {
       tag: "renotify",
       renotify: true,
