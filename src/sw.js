@@ -1,5 +1,5 @@
-const cacheName = "static-cache-v5";
-const cacheAllowList = ["static-cache-v5"];
+const cacheName = "static-cache-v1";
+const cacheAllowList = ["static-cache-v1"];
 const urlsToCache = [
   "/",
   "index.html",
@@ -43,12 +43,11 @@ self.addEventListener("fetch", function (e) {
 
       return fetch(e.request).then((fetchResponse) => {
         // check for valid fetched response
-        // do not cache if invalid or a third-party asset
+        // do not cache if invalid
         if (
           !fetchResponse ||
           fetchResponse.status !== 200 ||
-          fetchResponse.type !== "basic" ||
-          fetchResponse.type !== "cors"
+          fetchResponse.type == "opaque"
         ) {
           return fetchResponse;
         }
