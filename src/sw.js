@@ -47,7 +47,7 @@ self.addEventListener("fetch", function (e) {
         if (
           !fetchResponse ||
           fetchResponse.status !== 200 ||
-          fetchResponse.type !== "basic"
+          (fetchResponse.type !== "basic" || fetchResponse.type !== "cors")
         ) {
           return fetchResponse;
         }
