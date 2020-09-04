@@ -1,6 +1,68 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { css } from "@emotion/core";
 import { FaRegTimesCircle } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+const styles = {
+  container: css`
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    margin: 10px;
+    padding: 10px;
+    background: #fafafa;
+    outline: 1px solid rgba(0, 0, 0, 0.5);
+    outline-offset: -7.5px;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3),
+      2px 5px 10px 1px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    font-size: 1.1rem;
+    max-width: 25ch;
+    border-radius: 2px;
+
+    > p {
+      margin: 10px;
+    }
+  `,
+  close: css`
+    border: none;
+    background: none;
+    font-size: inherit;
+    float: right;
+    margin: 7px 4px 4px;
+    padding: 0;
+    border-radius: 100%;
+    border: 3px solid transparent;
+    transition: background 0.5s;
+
+    &:hover {
+      background: lightgray;
+    }
+
+    &:focus {
+      background: gray;
+      outline: none;
+    }
+
+    svg {
+      /* remove space beneath */
+      display: block;
+    }
+  `,
+  button: css`
+    width: calc(100% - 10px);
+    clear: both;
+    text-align: center;
+    padding: 10px;
+    margin: 5px;
+  `,
+  message: css`
+    font-size: 0.8em;
+    color: gray;
+  `,
+};
+
 // CUSTOM HOOKS
 export const useNotifications = () => {
   const [wantsNotifications, setWantsNotifications] = useState(
@@ -9,7 +71,7 @@ export const useNotifications = () => {
 
   const [notificationReply, setNotificationReply] = useState(null);
 
-  const [toast, setToast] = useState({message: "Hello! This is a very long message to show that it can be long! <3", action: {title: "DO THING", callback: () => setNotificationReply("startNext")}});
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     function handleMessage(e) {
@@ -64,76 +126,36 @@ export const useNotifications = () => {
   const NotificationToast = () => {
     function close() {
       setToast(null);
+      setNotificationReply(null);
     }
 
-    const styles = {
-      container: css`
-      position: fixed;
-      top: 0;
-      right: 0;
-      margin: 10px;
-      padding: 10px;
-      background: #fafafa;
-      outline: 1px solid rgba(0,0,0,0.5);
-      outline-offset: -7.5px;
-      box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3), 2px 5px 10px 1px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      font-size: 1.25rem;
-      max-width: 25ch;
-      border-radius: 2px;
+    return (
+      <motion.div
+        initial={{ opacity: 0, top: 10 }}
+        animate={{ opacity: 1, top: 0 }}
+        exit={{ opacity: 0, top: -10 }}
+        css={styles.container}
+      >
+        <button onClick={close} css={styles.close}>
+          <FaRegTimesCircle />
+        </button>
 
-      > * {
-        padding: 10px;
-        margin: 5px;
-      }
-    `,
-    close: css`
-      border: none;
-      background: none;
-      font-size: inherit;
-      float: right;
-      margin-top: 7px;
-      padding: 0;
-      border-radius: 100%;
-      border: 3px solid transparent;
-      transition: background 0.5s;
+        <p>{toast.title}</p>
 
-      &:hover {
-        background: lightgray;
-      }
+        {toast.message && <p css={styles.message}>{toast.message}</p>}
 
-      &:focus {
-        background: gray;
-        outline: none;
-      }
-
-      svg {
-        /* remove space beneath */
-        display: block;
-      }
-    `,
-    button: css `
-    width: calc(100% - 10px);
-    clear: both;
-    text-align: center;
-    margin-top: -5px;
-    `
-    }
-
-    if (toast !== null)
-      return (
-        <div
-          css={styles.container}
-        >
-          <button onClick={close} css={styles.close}>
-            <FaRegTimesCircle />
+        {toast.action && (
+          <button
+            css={styles.button}
+            onClick={() => {
+              toast.action.callback();
+            }}
+          >
+            {toast.action.title}
           </button>
-          <p>{toast.message}</p>
-          {toast.action && <button css={styles.button} onClick={()=>{toast.action.callback(); close();}}>{toast.action.title}</button>}
-        </div>
-      );
-
-    return null;
+        )}
+      </motion.div>
+    );
   };
 
   async function sendNotification(title = "Notification!", options = null) {
@@ -163,6 +185,7 @@ export const useNotifications = () => {
     setWantsNotifications,
     notificationReply,
     setNotificationReply,
-    setToast
+    setToast,
+    toast,
   };
 };

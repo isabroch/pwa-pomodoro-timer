@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 export const Countdown = ({
   name,
   color = "red",
-  timer: { secondsElapsed, secondsDuration, secondsRemaining }, }) => {
+  timer: { secondsElapsed, secondsDuration, secondsRemaining },
+}) => {
   const timeRemaining = moment
     .duration(secondsRemaining, "seconds")
     .format("hh:*mm:ss");
@@ -64,14 +65,16 @@ export const Countdown = ({
             style={{ stroke: color }}
             cx="50"
             cy="50"
-            r="45" />
+            r="45"
+          />
           <motion.path
             css={styles.timeElapsed}
             d="M 50, 50 m -45, 0 a 45,45 0 1,0 90,0 a 45,45 0 1,0 -90,0"
             initial={{ pathLength: 0 }}
             animate={{
               pathLength: Math.max(secondsElapsed / secondsDuration || 0, 0),
-            }} />
+            }}
+          />
         </g>
       </svg>
       <div css={[styles.labels, styles.absolutePosition]}>

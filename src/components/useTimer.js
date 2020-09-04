@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 // speed of clocks in ms
-const speed = 1;
+const speed = 1000;
+
 export const useTimer = (secondsDuration, timerEndCallback) => {
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isActive, setIsActive] = useState(false);

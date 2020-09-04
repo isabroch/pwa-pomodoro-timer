@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { css } from "@emotion/core";
 import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
@@ -8,24 +8,42 @@ import { usePhases } from "./usePhases";
 import { Inputs } from "./Inputs";
 import { Countdown } from "./Countdown";
 import { Buttons } from "./Buttons";
+import { randQuote } from "./useQuote";
 
 // initialize duration formatting plugin for moment library
 momentDurationFormatSetup(moment);
 
 // MAIN COMPONENT
-export const PomodoroTimer = ({notifications}) => {
+export const PomodoroTimer = ({ notifications }) => {
   const {
     NotificationCheckbox,
+    NotificationToast,
     sendNotification,
     notificationReply,
     setNotificationReply,
-    setToast
+    setToast,
+    toast,
   } = notifications;
   const phases = usePhases();
-  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
+  const timer = useTimer(phases.currentPhase.duration, endTimer);
+
+  const [quote, setQuote] = useState({});
 
   function endTimer() {
     const title = `${phases.currentPhase.name} time has ended!`;
+    const message = (
+      <span>
+        {quote.text}
+        <span
+          css={css`
+            white-space: nowrap;
+          `}
+        >
+          {" "}
+          — {quote.author}{" "}
+        </span>
+      </span>
+    );
     const options = {
       tag: "renotify",
       renotify: true,
@@ -37,7 +55,14 @@ export const PomodoroTimer = ({notifications}) => {
     };
     try {
       // TODO: Trigger nextphase action, currently getting warning Warning: Cannot update a component (`App`) while rendering a different component (`PomodoroTimer`). To locate the bad setState() call inside `PomodoroTimer`, follow the stack trace as described in https://fb.me/setstate-in-render
-      setToast({message: title, action: {title: options.actions.title, callback: () => setNotificationReply("startNext")}})
+      setToast({
+        title,
+        message,
+        action: {
+          title: `Start ${phases.nextPhase.name}`,
+          callback: () => setNotificationReply("startNext"),
+        },
+      });
       sendNotification(title, options);
     } catch (error) {
       console.error("Notification could not be sent", error);
@@ -50,6 +75,7 @@ export const PomodoroTimer = ({notifications}) => {
         phases.goToNextPhase();
         timer.setSecondsElapsed(0);
         timer.setIsActive(true);
+        setToast(null);
         setNotificationReply(null);
         break;
 
@@ -57,6 +83,10 @@ export const PomodoroTimer = ({notifications}) => {
         break;
     }
   }, [notificationReply]);
+
+  useEffect(() => {
+    randQuote().then((quoteData) => setQuote(quoteData));
+  }, [toast]);
 
   return (
     <div
