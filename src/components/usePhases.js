@@ -4,7 +4,7 @@ export const usePhases = () => {
     {
       id: 0,
       name: "Work",
-      duration: 1,
+      duration: 25,
       color: "red",
     },
     {
@@ -33,11 +33,13 @@ export const usePhases = () => {
   const [currentPhaseID, setCurrentPhaseID] = useState(0);
 
   const goToNextPhase = () => {
-    setCurrentPhaseID((prevPhase) => prevPhase === phases.length - 1 ? 0 : prevPhase + 1
+    setCurrentPhaseID((prevPhase) =>
+      prevPhase === phases.length - 1 ? 0 : prevPhase + 1
     );
   };
 
-  const nextPhase = phases[currentPhaseID === phases.length - 1 ? 0 : currentPhaseID + 1];
+  const nextPhase =
+    phases[currentPhaseID === phases.length - 1 ? 0 : currentPhaseID + 1];
 
   const currentPhase = phases[currentPhaseID];
 

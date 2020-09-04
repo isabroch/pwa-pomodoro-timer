@@ -21,50 +21,54 @@ export const PomodoroTimer = ({ notifications }) => {
     sendNotification,
     notificationReply,
     setNotificationReply,
+    wantsNotifications,
     setToast,
     toast,
   } = notifications;
   const phases = usePhases();
-  const timer = useTimer(phases.currentPhase.duration, endTimer);
+  const timer = useTimer(phases.currentPhase.duration * 60, endTimer);
 
   const [quote, setQuote] = useState({});
 
   function endTimer() {
-    const title = `${phases.currentPhase.name} time has ended!`;
-    const message = quote.text ? (
-      <span>
-        {quote.text}
-        <span
-          css={css`
-            white-space: nowrap;
-          `}
-        >
-          — {quote.author || "?"}
+    if (wantsNotifications) {
+      const title = `${phases.currentPhase.name} time has ended!`;
+      const message = quote.text ? (
+        <span>
+          {quote.text}
+          <span
+            css={css`
+              white-space: nowrap;
+            `}
+          >
+            {" "}
+            — {quote.author || "?"}
+          </span>
         </span>
-      </span>
-    ) : null;
-    const options = {
-      tag: "renotify",
-      renotify: true,
-      vibrate: [200, 100, 200, 100, 500],
-      data: phases.currentPhaseID,
-      actions: [
-        { action: "startNext", title: `Start ${phases.nextPhase.name}` },
-      ],
-    };
-    try {
-      // TODO: Trigger nextphase action, currently getting warning Warning: Cannot update a component (`App`) while rendering a different component (`PomodoroTimer`). To locate the bad setState() call inside `PomodoroTimer`, follow the stack trace as described in https://fb.me/setstate-in-render
-      setToast({
-        title,
-        message,
-        action: {
-          title: `Start ${phases.nextPhase.name}`,
-          callback: () => setNotificationReply("startNext"),
-        },
-      });
-      sendNotification(title, options);
-    } catch (error) {
-      console.error("Notification could not be sent", error);
+      ) : null;
+      const options = {
+        tag: "renotify",
+        renotify: true,
+        vibrate: [200, 100, 200, 100, 500],
+        data: phases.currentPhaseID,
+        actions: [
+          { action: "startNext", title: `Start ${phases.nextPhase.name}` },
+        ],
+      };
+      try {
+        // TODO: Trigger nextphase action, currently getting warning Warning: Cannot update a component (`App`) while rendering a different component (`PomodoroTimer`). To locate the bad setState() call inside `PomodoroTimer`, follow the stack trace as described in https://fb.me/setstate-in-render
+        setToast({
+          title,
+          message,
+          action: {
+            title: `Start ${phases.nextPhase.name}`,
+            callback: () => setNotificationReply("startNext"),
+          },
+        });
+        sendNotification(title, options);
+      } catch (error) {
+        console.error("Notification could not be sent", error);
+      }
     }
   }
 
